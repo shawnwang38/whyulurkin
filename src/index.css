@@ -1,0 +1,57 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+/* ── Theme tokens ── */
+html[data-theme="dark"] {
+  --bg:           #0a0a0a;
+  --bg-card:      #111111;
+  --bg-card-alt:  #161616;
+  --border:       #222222;
+  --border-soft:  #1a1a1a;
+  --text:         #e8e8e8;
+  --text-muted:   #666666;
+  --text-faint:   #333333;
+  --accent:       #e8e8e8;
+  --accent-dim:   #888888;
+  --btn-bg:       #1a1a1a;
+  --btn-border:   #2e2e2e;
+  --btn-hover:    #242424;
+  --btn-primary-bg:     #0f2e1a;
+  --btn-primary-color:  #5cba78;
+  --btn-primary-border: #1a4a2a;
+  --btn-primary-hover:  #143820;
+}
+
+html[data-theme="light"] {
+  --bg:           #f5f4f0;
+  --bg-card:      #ffffff;
+  --bg-card-alt:  #f0efe9;
+  --border:       #e0ddd6;
+  --border-soft:  #ebe9e2;
+  --text:         #1a1a1a;
+  --text-muted:   #888888;
+  --text-faint:   #c8c6be;
+  --accent:       #1a1a1a;
+  --accent-dim:   #666666;
+  --btn-bg:       #ffffff;
+  --btn-border:   #d8d5ce;
+  --btn-hover:    #f5f4f0;
+  --btn-primary-bg:     #e8f5ec;
+  --btn-primary-color:  #2e7d46;
+  --btn-primary-border: #b8dfc4;
+  --btn-primary-hover:  #ddf0e4;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s, color 0.2s;
+}

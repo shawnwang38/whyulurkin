@@ -1,0 +1,283 @@
+/* App.module.css */
+
+/* ── Outer shell ── */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.5rem 1.5rem 2.5rem;
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ── Theme toggle (top-right) ── */
+.themeBtn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+  z-index: 100;
+}
+.themeBtn:hover {
+  background: var(--btn-hover);
+  border-color: var(--accent-dim);
+}
+
+/* ── Header ── */
+.header {
+  margin-bottom: 2.5rem;
+}
+
+.title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 0.9rem;
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+/* ── Main button ── */
+.startBtn {
+  padding: 0.7rem 2.4rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: 1px solid var(--btn-primary-border);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 0.75rem;
+}
+.startBtn:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+}
+.startBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stopBtn {
+  padding: 0.7rem 2.4rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--text-muted);
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 0.75rem;
+}
+.stopBtn:hover:not(:disabled) {
+  background: var(--btn-hover);
+  border-color: var(--accent-dim);
+}
+.stopBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Loading indicator ── */
+.loading {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* ── Errors ── */
+.error {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid #4a1a1a;
+  color: #ff8a80;
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+/* ── Advanced section ── */
+.advanced {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* ── Config card ── */
+.configCard {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  text-align: left;
+}
+
+/* ── Stats bar ── */
+.statsBar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.statLabel {
+  font-size: 0.65rem;
+  text-transform: lowercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.statValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text);
+}
+
+.statAlert { color: #ff6b6b; }
+.statSafe  { color: #5cba78; }
+
+/* ── Camera feed ── */
+.videoWrap {
+  width: 100%;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  background: #050505;
+  border: 1px solid var(--border);
+  border-top: none;
+}
+
+.videoWrapNoStats {
+  border-radius: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  transform: scaleX(-1);
+}
+
+/* ── Bottom section ── */
+.bottom {
+  margin-top: auto;
+  padding-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* ── Mode toggle ── */
+.modeToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.modeLabel {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.modeLabelActive {
+  color: var(--text);
+}
+
+/* Toggle switch pill */
+.toggleSwitch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggleTrack {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: var(--btn-border);
+  border: 1px solid var(--btn-border);
+  transition: background 0.2s;
+}
+
+.toggleSwitch input:checked + .toggleTrack {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg);
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+
+.toggleSwitch input:checked ~ .toggleThumb {
+  transform: translateX(16px);
+}
+
+/* ── X link ── */
+.xLink {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.xLink:hover {
+  color: var(--text-muted);
+}

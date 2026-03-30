@@ -15,8 +15,9 @@ const SIMPLE_THRESHOLDS = {
 }
 
 const ADVANCED_DEFAULT_CONFIG: ConfigValues = {
-  headPoseYawDeg:   25,
-  headPosePitchDeg: 15,
+  headPoseYawDeg:      25,
+  headPosePitchDeg:    15,
+  irisOffsetThreshold: CLASSIFICATION_THRESHOLDS.irisOffsetThreshold,
 }
 
 const LURKER_THRESHOLD = 1
@@ -39,7 +40,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function App() {
-  const { videoRef, isActive, error: cameraError, startCamera, stopCamera } = useCamera()
+  const { videoRef, videoEl, isActive, error: cameraError, startCamera, stopCamera } = useCamera()
   const { status: landmarkerStatus, error: landmarkerError, detectForVideo, initialize, destroy } = useFaceLandmarker()
   const { pipSupported, openPip, closePip, updatePip, syncPipTheme } = usePipOverlay()
 
@@ -48,17 +49,16 @@ export default function App() {
   const [mode, setMode]                        = useState<Mode>('simple')
   const [theme, setTheme]                      = useState<Theme>(getInitialTheme)
 
-  // Apply theme on mount and whenever it changes
   useEffect(() => { applyTheme(theme) }, [theme])
 
   const modeRef   = useRef<Mode>(mode)
   const configRef = useRef<ConfigValues>(advancedConfig)
-  useEffect(() => { modeRef.current = mode },          [mode])
+  useEffect(() => { modeRef.current = mode },             [mode])
   useEffect(() => { configRef.current = advancedConfig }, [advancedConfig])
 
-  const rafRef       = useRef<number | null>(null)
-  const frameCount   = useRef(0)
-  const lastLogTime  = useRef(performance.now())
+  const rafRef      = useRef<number | null>(null)
+  const frameCount  = useRef(0)
+  const lastLogTime = useRef(performance.now())
 
   useEffect(() => {
     initialize()
@@ -66,8 +66,7 @@ export default function App() {
   }, [initialize, destroy])
 
   const runLoop = useCallback(() => {
-    const video = videoRef.current
-    if (!video || !isActive) return
+    if (!videoEl || !isActive) return
 
     const thresholds = modeRef.current === 'simple'
       ? SIMPLE_THRESHOLDS
@@ -75,10 +74,10 @@ export default function App() {
           headPoseYawDeg:      configRef.current.headPoseYawDeg,
           headPosePitchDeg:    configRef.current.headPosePitchDeg,
           headPoseRollDeg:     CLASSIFICATION_THRESHOLDS.headPoseRollDeg,
-          irisOffsetThreshold: CLASSIFICATION_THRESHOLDS.irisOffsetThreshold,
+          irisOffsetThreshold: configRef.current.irisOffsetThreshold,
         }
 
-    const faces  = detectForVideo(video)
+    const faces  = detectForVideo(videoEl)
     const result = classifyFaces(faces, thresholds)
     setClassification(result)
     updatePip(result.lurkerCount, LURKER_THRESHOLD)
@@ -94,7 +93,7 @@ export default function App() {
     }
 
     rafRef.current = requestAnimationFrame(runLoop)
-  }, [isActive, detectForVideo, videoRef, updatePip])
+  }, [isActive, videoEl, detectForVideo, updatePip])
 
   useEffect(() => {
     if (isActive && landmarkerStatus === 'ready') {
@@ -108,15 +107,8 @@ export default function App() {
     }
   }, [isActive, landmarkerStatus, runLoop])
 
-  // Auto-open PiP when tab loses focus
-  useEffect(() => {
-    const onVisibility = () => {
-      if (!isActive || !pipSupported) return
-      if (document.visibilityState === 'hidden') openPip(theme)
-    }
-    document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [isActive, pipSupported, openPip, theme])
+  // PiP is opened eagerly on handleStart (a user gesture).
+  // visibilitychange has no gesture so Chrome blocks requestWindow() there — removed.
 
   const toggleTheme = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
@@ -140,6 +132,9 @@ export default function App() {
   const gazes     = classification.decisions.filter(d => d.isLurker).length
   const faces     = classification.decisions.length
 
+  // Video element is in-layout only when advanced mode + camera active
+  const showVideo = mode === 'advanced' && isActive
+
   return (
     <div className={styles.app}>
       {/* theme toggle */}
@@ -153,85 +148,68 @@ export default function App() {
 
       {/* header */}
       <div className={styles.header}>
-        <h1 className={styles.title}>whyulurkin</h1>
+        <h1 className={styles.title}>whyulurkin 👀</h1>
         <p className={styles.subtitle}>
-          lets you know when someone else is looking at your screen. processed locally — we never receive or store your camera.
+          lets you know when someone else is looking at your screen. your video feed is fully private.
         </p>
       </div>
 
-      {/* loading */}
       {isLoading && <p className={styles.loading}>loading model…</p>}
 
-      {/* errors */}
-      {cameraError   && <div className={styles.error}>{cameraError.message.toLowerCase()}</div>}
+      {cameraError    && <div className={styles.error}>{cameraError.message}</div>}
       {landmarkerError && <div className={styles.error}>model error: {landmarkerError.toLowerCase()}</div>}
 
-      {/* start / stop */}
       {!isActive ? (
-        <button
-          className={styles.startBtn}
-          onClick={handleStart}
-          disabled={!isReady}
-        >
+        <button className={styles.startBtn} onClick={handleStart} disabled={!isReady}>
           start
         </button>
       ) : (
-        <button
-          className={styles.stopBtn}
-          onClick={handleStop}
-        >
+        <button className={styles.stopBtn} onClick={handleStop}>
           stop
         </button>
       )}
 
-      {/* advanced mode content */}
+      {/* advanced mode panel */}
       {mode === 'advanced' && (
         <div className={styles.advanced}>
-          {/* config */}
           <div className={styles.configCard}>
             <ConfigPanel config={advancedConfig} onChange={setAdvancedConfig} />
           </div>
 
-          {/* stats + camera */}
           {isActive && (
-            <>
-              <div className={styles.statsBar}>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>faces detected</span>
-                  <span className={styles.statValue}>{faces}</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>gazes detected</span>
-                  <span className={`${styles.statValue} ${gazes > 0 ? styles.statAlert : ''}`}>{gazes}</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statLabel}>status</span>
-                  <span className={`${styles.statValue} ${lurking ? styles.statAlert : styles.statSafe}`}>
-                    {lurking ? '👀' : '✓'}
-                  </span>
-                </div>
+            <div className={styles.statsBar}>
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>faces detected</span>
+                <span className={styles.statValue}>{faces}</span>
               </div>
-              <div className={styles.videoWrap}>
-                <video ref={videoRef} className={styles.video} playsInline muted />
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>gazes detected</span>
+                <span className={`${styles.statValue} ${gazes > 0 ? styles.statAlert : ''}`}>{gazes}</span>
               </div>
-            </>
-          )}
-          {!isActive && (
-            <div className={styles.videoWrap} style={{ display: 'none' }}>
-              <video ref={videoRef} className={styles.video} playsInline muted />
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>status</span>
+                <span className={`${styles.statValue} ${lurking ? styles.statAlert : styles.statSafe}`}>
+                  {lurking ? '👀' : '✓'}
+                </span>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* keep video element mounted even in simple mode so the ref works */}
-      {mode === 'simple' && (
-        <div style={{ display: 'none' }}>
-          <video ref={videoRef} playsInline muted />
-        </div>
-      )}
+      {/*
+        Single <video> always in the DOM — callback ref re-attaches the stream
+        whenever React hands it a new node (mode switch, etc.).
+        Off-screen when not displayed so it never affects layout.
+      */}
+      <div
+        className={styles.videoWrap}
+        style={showVideo ? undefined : { position: 'fixed', top: '-9999px', left: '-9999px' }}
+      >
+        <video ref={videoRef} className={styles.video} playsInline muted />
+      </div>
 
-      {/* bottom: toggle + link */}
+      {/* bottom: mode toggle + link */}
       <div className={styles.bottom}>
         <label className={styles.modeToggle}>
           <span className={`${styles.modeLabel} ${mode === 'simple' ? styles.modeLabelActive : ''}`}>

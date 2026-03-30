@@ -6,7 +6,15 @@ export type CameraError =
   | { type: 'unknown'; message: string }
 
 export interface UseCameraReturn {
-  videoRef: React.RefObject<HTMLVideoElement | null>
+  /**
+   * Callback ref — pass directly as `ref` to the <video> element.
+   * When React attaches a new DOM node (e.g. after a mode switch),
+   * the hook re-attaches the active stream immediately so the feed
+   * is never lost across conditional re-renders.
+   */
+  videoRef: (el: HTMLVideoElement | null) => void
+  /** The current video element, for inference callers. */
+  videoEl: HTMLVideoElement | null
   isActive: boolean
   error: CameraError | null
   startCamera: () => Promise<void>
@@ -14,10 +22,20 @@ export interface UseCameraReturn {
 }
 
 export function useCamera(): UseCameraReturn {
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
+  const videoElRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef  = useRef<MediaStream | null>(null)
   const [isActive, setIsActive] = useState(false)
-  const [error, setError] = useState<CameraError | null>(null)
+  const [error, setError]       = useState<CameraError | null>(null)
+
+  // Callback ref — called by React whenever the <video> node changes.
+  // Re-attaches the stream on the new element so mode switches don't blank the feed.
+  const videoRef = useCallback((el: HTMLVideoElement | null) => {
+    videoElRef.current = el
+    if (el && streamRef.current) {
+      el.srcObject = streamRef.current
+      el.play().catch(() => {/* muted — should always succeed */})
+    }
+  }, [])
 
   const startCamera = useCallback(async () => {
     setError(null)
@@ -27,19 +45,20 @@ export function useCamera(): UseCameraReturn {
         audio: false,
       })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
+      const el = videoElRef.current
+      if (el) {
+        el.srcObject = stream
+        await el.play()
       }
       setIsActive(true)
     } catch (err) {
       const e = err as DOMException
       if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-        setError({ type: 'permission-denied', message: 'Camera permission denied. Please allow camera access and reload.' })
+        setError({ type: 'permission-denied', message: 'camera permission denied. please allow camera access and reload.' })
       } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-        setError({ type: 'not-found', message: 'No camera found on this device.' })
+        setError({ type: 'not-found', message: 'no camera found on this device.' })
       } else {
-        setError({ type: 'unknown', message: `Camera error: ${e.message}` })
+        setError({ type: 'unknown', message: `camera error: ${e.message}` })
       }
       setIsActive(false)
     }
@@ -47,14 +66,12 @@ export function useCamera(): UseCameraReturn {
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
+    if (videoElRef.current) videoElRef.current.srcObject = null
     setIsActive(false)
   }, [])
 
-  return { videoRef, isActive, error, startCamera, stopCamera }
+  return { videoRef, videoEl: videoElRef.current, isActive, error, startCamera, stopCamera }
 }

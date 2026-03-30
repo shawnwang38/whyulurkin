@@ -3,6 +3,7 @@ import styles from './ConfigPanel.module.css'
 export interface ConfigValues {
   headPoseYawDeg: number
   headPosePitchDeg: number
+  irisOffsetThreshold: number
 }
 
 interface ConfigPanelProps {
@@ -70,6 +71,15 @@ export function ConfigPanel({ config, onChange }: ConfigPanelProps) {
         step={1}
         format={v => `±${v}°`}
         onChange={set('headPosePitchDeg')}
+      />
+      <Slider
+        label="gaze range"
+        value={config.irisOffsetThreshold}
+        min={0.05}
+        max={0.50}
+        step={0.01}
+        format={v => v.toFixed(2)}
+        onChange={set('irisOffsetThreshold')}
       />
     </div>
   )
